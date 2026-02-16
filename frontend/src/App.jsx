@@ -19,7 +19,7 @@ import SearchAi from "./controller/SearchAi";
 import About from "./pages/About";
 import FullScreenLoader from "./controller/FullLoader";
 
-export const serverUrl = "http://localhost:5000"
+export const serverUrl = "https://learnx-e3va.onrender.com"
 
 const App = () => {
   useCurrentUser();
