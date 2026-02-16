@@ -19,83 +19,80 @@ import {
   MenuList,
   MenuItem,
   ScaleFade,
+  Divider,
 } from "@chakra-ui/react";
+
 import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
 import { Sparkles, User } from "lucide-react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
-import { clearUserData } from "../redux/userSlice";
 import toast from "react-hot-toast";
-import SearchAi from "./SearchAi";
+
+import { clearUserData } from "../redux/userSlice";
 import { serverUrl } from "../App";
 
 const Navbar = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { userData } = useSelector((state) => state.user);
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-   const handleLogout = async () => {
-  try {
-    await axios.post(
-      `${serverUrl}/api/auth/logout`,
-      {},
-      { withCredentials: true }
-    );
+  // ================= LOGOUT =================
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${serverUrl}/api/auth/logout`,
+        {},
+        { withCredentials: true }
+      );
 
-    // 1️⃣ clear redux
-    dispatch(clearUserData());
+      dispatch(clearUserData());
+      localStorage.clear();
+      sessionStorage.clear();
 
-    // 2️⃣ clear any localStorage (if you store anything)
-    localStorage.clear();
-    sessionStorage.clear();
+      toast.success("Logged out successfully");
 
-    toast.success("Logged out successfully");
+      navigate("/login", { replace: true });
+      window.location.reload();
+    } catch (err) {
+      console.log(err);
+      toast.error("Logout failed");
+    }
+  };
 
-    // 3️⃣ redirect
-    navigate("/login", { replace: true });
-
-    // 4️⃣ force reload to remove any cached auth
-    window.location.reload();
-
-  } catch (err) {
-    console.log(err);
-    toast.error("Logout failed");
-  }
-};
-
-
+  // ================= UI =================
   return (
-    <ScaleFade initialScale={0.9} in={true} transition={{ enter: { duration: 0.6 } }}>
+    <ScaleFade initialScale={0.9} in transition={{ enter: { duration: 0.4 } }}>
       <Box
         px={{ base: 4, md: 10 }}
         py={3}
         position="sticky"
         top="0"
         zIndex="1000"
-        bg="rgba(255, 255, 255, 0.25)"
+        bg="rgba(255,255,255,0.25)"
         backdropFilter="blur(14px)"
-        borderBottom="1px solid rgba(255, 255, 255, 0.2)"
+        borderBottom="1px solid rgba(255,255,255,0.2)"
         boxShadow="sm"
-        fontFamily="Poppins, sans-serif"
       >
         <Flex h={16} alignItems="center" justifyContent="space-between">
-          
+          {/* ===== LOGO ===== */}
           <Text
             fontSize={{ base: "xl", md: "2xl" }}
             fontWeight="bold"
             color="teal.500"
+            cursor="pointer"
+            onClick={() => navigate("/")}
           >
             LearnX
           </Text>
 
-          {/* Desktop */}
-          <Flex alignItems="center" gap={4} display={{ base: "none", md: "flex" }}>
+          {/* ================= DESKTOP MENU ================= */}
+          <Flex gap={4} align="center" display={{ base: "none", md: "flex" }}>
             <Button
               as={RouterLink}
               to="/dashboard"
-              colorScheme="teal"
               variant="ghost"
               size="sm"
             >
@@ -118,21 +115,22 @@ const Navbar = () => {
                   <Avatar
                     name={userData?.user?.name}
                     src={userData?.user?.photoUrl}
-                    bg="teal.500"
-                    color="white"
                     size="sm"
+                    bg="teal.500"
+                    cursor="pointer"
                   />
                 </MenuButton>
+
                 <MenuList>
-                  <MenuItem as={RouterLink} to="/my-courses">
-                    My Courses
-                  </MenuItem>
                   <MenuItem as={RouterLink} to="/profile">
                     Profile
                   </MenuItem>
-                  <MenuItem onClick={handleLogout}>
-                    Logout
+
+                  <MenuItem as={RouterLink} to="/my-courses">
+                    My Courses
                   </MenuItem>
+
+                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
                 </MenuList>
               </Menu>
             ) : (
@@ -149,30 +147,49 @@ const Navbar = () => {
             )}
           </Flex>
 
-          {/* Mobile Toggle */}
+          {/* ================= MOBILE TOGGLE ================= */}
           <IconButton
-            size="md"
-            icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
-            aria-label="Open Menu"
             display={{ md: "none" }}
+            icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
+            aria-label="menu"
             onClick={isOpen ? onClose : onOpen}
             color="teal.500"
           />
         </Flex>
 
-        {/* Mobile Drawer */}
+        {/* ================= MOBILE DRAWER ================= */}
         <Drawer placement="right" onClose={onClose} isOpen={isOpen}>
           <DrawerOverlay />
           <DrawerContent>
             <DrawerCloseButton />
-            <DrawerHeader color="teal.500">LearnX Menu</DrawerHeader>
+            <DrawerHeader color="teal.500">Menu</DrawerHeader>
 
             <DrawerBody>
-              <Stack spacing={6}>
+              <Stack spacing={5}>
+                {/* ===== USER INFO ===== */}
+                {userData && (
+                  <>
+                    <Flex direction="column" align="center" gap={2}>
+                      <Avatar
+                        name={userData?.user?.name}
+                        src={userData?.user?.photoUrl}
+                        size="xl"
+                        bg="teal.500"
+                      />
+                      <Text fontWeight="bold">
+                        {userData?.user?.name}
+                      </Text>
+                      <Text fontSize="sm" color="gray.500">
+                        {userData?.user?.email}
+                      </Text>
+                    </Flex>
+                    <Divider />
+                  </>
+                )}
+
                 <Button
                   as={RouterLink}
                   to="/dashboard"
-                  colorScheme="teal"
                   variant="ghost"
                   w="full"
                   onClick={onClose}
@@ -180,37 +197,54 @@ const Navbar = () => {
                   Dashboard
                 </Button>
 
-                {/* ✅ FIXED AI SEARCH BUTTON */}
                 <Button
                   leftIcon={<Sparkles size={16} />}
-                  colorScheme="teal"
-                  rounded="full"
-                  size="sm"
+                  variant="ghost"
                   w="full"
                   onClick={() => {
-                    onClose();
                     navigate("/about");
+                    onClose();
                   }}
                 >
                   About Us
                 </Button>
 
+                {userData && (
+                  <>
+                    <Button
+                      as={RouterLink}
+                      to="/profile"
+                      variant="ghost"
+                      w="full"
+                      onClick={onClose}
+                    >
+                      Profile
+                    </Button>
+
+                    <Button
+                      as={RouterLink}
+                      to="/my-courses"
+                      variant="ghost"
+                      w="full"
+                      onClick={onClose}
+                    >
+                      My Courses
+                    </Button>
+                  </>
+                )}
+
+                <Divider />
+
                 {userData ? (
-                  <Button
-                    w="full"
-                    colorScheme="red"
-                    variant="outline"
-                    onClick={handleLogout}
-                  >
+                  <Button colorScheme="red" w="full" onClick={handleLogout}>
                     Logout
                   </Button>
                 ) : (
                   <Button
                     as={RouterLink}
                     to="/login"
-                    w="full"
                     colorScheme="teal"
-                    rounded="full"
+                    w="full"
                     onClick={onClose}
                   >
                     Login
