@@ -2,6 +2,7 @@
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setUserData, clearUserData } from "../redux/userSlice";
+import { serverUrl } from "../App";
 
 const useCurrentUser = () => {
   const dispatch = useDispatch();
@@ -11,7 +12,7 @@ const useCurrentUser = () => {
       try {
         const token = localStorage.getItem("token"); // get your token from storage
         const res = await axios.get(
-          "http://localhost:5000/api/user/get_currUser",
+          `${serverUrl}/api/user/get_currUser`,
           {
             headers: { Authorization: `Bearer ${token}` },
             withCredentials: true, // correct syntax

@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setcreatorCourseData } from "../redux/courseSlice";
+import {serverUrl} from "../App"
 
 const useCreatorCourse = () => {
   const dispatch = useDispatch();
@@ -10,7 +11,7 @@ const useCreatorCourse = () => {
     const fetchCourse = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/course/getCreator",
+          `${serverUrl}/api/course/getCreator`,
           { withCredentials: true }
         );
 
