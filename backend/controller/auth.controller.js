@@ -40,12 +40,12 @@ export const registerController = async (req ,res)=>{
             password: hashedPass 
         })
         const token = await genToken(user._id)
-        res.cookie("token" , token ,{
-            httpOnly:true ,
-            secure:true,
-             sameSite: "none",
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        })
+        res.cookie("token", token, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+});
 
         res.status(201).json({
             message:"User Created Successfuly",
@@ -61,56 +61,47 @@ export const registerController = async (req ,res)=>{
 }
 
 
-export const loginController = async(req ,res)=>{
-    try {
-        const {email , password , role} = req.body
-         
-        // find user 
-        const user = await User.findOne({email})
-        // check user exist or not
+export const loginController = async (req, res) => {
+  try {
+    const { email, password, role } = req.body;
 
-        if(!user){
-          return   res.status(400).json({message:"Invalid Credientials"})
-        }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid Credentials" });
+    }
 
-        // password match
+    const isPassMatch = await bcrypt.compare(password, user.password);
+    if (!isPassMatch) {
+      return res.status(400).json({ message: "Invalid Credentials" });
+    }
 
-        const isPassMatch = await bcrypt.compare(password , user.password)
-
-        if(!isPassMatch){
-              return   res.status(400).json({message:"Invalid Credientials"})
-        }
-        // role defined 
-
-        if (user.role.toLowerCase() !== role.toLowerCase()) {
+    if (user.role.toLowerCase() !== role.toLowerCase()) {
       return res.status(401).json({
-        message: "Role does not match. Please select correct role",
+        message: "Role does not match",
       });
     }
-        // cookie and token setup 
 
-         const token = await genToken(user._id)
-        res.cookie("token" , token ,{
-            httpOnly:true ,
-            secure:true,
-           sameSite: "none",
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        })
+    const token = await genToken(user._id);
 
-        res.status(201).json({
-            message:"Login Successfuly",
-            user
-             
-        })
-        
-        
-    } catch (error) {
-        console.log("error in login " , error)
-        return res.status(500).json({
-            message:`Login error ${error}`
-        })
-    }
-}
+    
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite:
+        process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      message: "Login Successful",
+      user,
+    });
+  } catch (error) {
+    console.log("Login error:", error);
+    res.status(500).json({ message: "Login Failed" });
+  }
+};
+
 
 
 export const logoutController = async (req, res) => {
